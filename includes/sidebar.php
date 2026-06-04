@@ -103,6 +103,14 @@
                         </li>
                     </ul>
                 </li>
+                <li class="<?php echo ($page_name == 'chat') ? 'active' : ''; ?>">
+                    <a href="chat.php">
+                        <span class="pcoded-micon">
+                            <i class="feather icon-message-circle"></i>
+                        </span>
+                        <span class="pcoded-mtext">Chat</span>
+                    </a>
+                </li>
             </ul>
         <?php endif; ?>   
         <?php if ($session_role == 'Staff') : ?>
@@ -185,6 +193,12 @@
                     <a href="my_attendance.php">
                         <span class="pcoded-micon"><i class="feather icon-clock"></i></span>
                         <span class="pcoded-mtext">My Attendance</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="chat.php">
+                        <span class="pcoded-micon"><i class="feather icon-message-circle"></i></span>
+                        <span class="pcoded-mtext">Chat</span>
                     </a>
                 </li>
             </ul>

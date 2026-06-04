@@ -1,5 +1,5 @@
 <?php
-date_default_timezone_set('Africa/Accra');
+date_default_timezone_set('Asia/Jakarta');
 session_start();
 include('../includes/config.php');
 
@@ -13,12 +13,12 @@ include('../includes/config.php');
 function handleImageUpload($file, $staff_id) {
     // Get document root path
     $document_root = $_SERVER['DOCUMENT_ROOT'];
-    $upload_dir = $document_root . '/leave_portal/uploads/images/';
+    $upload_dir = $document_root . '/leave_portal-main/uploads/images/';
     
     // Create directory if it doesn't exist
     if (!file_exists($upload_dir)) {
         if (!mkdir($upload_dir, 0777, true)) {
-            throw new RuntimeException('Failed to create upload directory');
+            throw new RuntimeException('Failed to create upload directory: ' . $upload_dir);
         }
         chmod($upload_dir, 0777);
     }
@@ -26,6 +26,21 @@ function handleImageUpload($file, $staff_id) {
     // Validate upload
     if (!isset($file['error']) || is_array($file['error'])) {
         throw new RuntimeException('Invalid upload parameters');
+    }
+    
+    // Check file upload errors
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $error_messages = array(
+            UPLOAD_ERR_INI_SIZE => 'File is larger than upload_max_filesize',
+            UPLOAD_ERR_FORM_SIZE => 'File is larger than form MAX_FILE_SIZE',
+            UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'Cannot write file to disk',
+            UPLOAD_ERR_EXTENSION => 'Upload blocked by extension'
+        );
+        $error_msg = isset($error_messages[$file['error']]) ? $error_messages[$file['error']] : 'Unknown upload error';
+        throw new RuntimeException($error_msg);
     }
 
     // Validate file type
@@ -59,7 +74,7 @@ function handleImageUpload($file, $staff_id) {
 
     chmod($filepath, 0644);
     
-    return '/leave_portal/uploads/images/' . $filename;
+    return '/leave_portal-main/uploads/images/' . $filename;
 }
 
 function resizeImage($sourcePath, $maxWidth = 230, $maxHeight = 230) {
@@ -119,25 +134,30 @@ function updateStaffRecords($edit_id, $firstname, $lastname, $middlename, $conta
     // Check if the image file is provided
     if ($image_path !== null && isset($image_path['name']) && !empty($image_path['name'])) {
         // Upload the image
+        try {
+            $image_target_path = handleImageUpload($image_path, $staff_id);
 
-        $image_target_path = handleImageUpload($image_path, $staff_id);
+            // Resize the image to 230x230
+            resizeImage($image_target_path);
 
-         // Resize the image to 230x230
-        resizeImage($image_target_path);
+            // If a new image is provided, remove the old image from the storage folder
+            $old_image_path = ''; // Get the old image path from the database
+            $stmt = mysqli_prepare($conn, "SELECT image_path FROM tblemployees WHERE emp_id = ?");
+            mysqli_stmt_bind_param($stmt, 'i', $edit_id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_bind_result($stmt, $old_image_path);
+            mysqli_stmt_fetch($stmt);
+            mysqli_stmt_close($stmt);
 
-        // If a new image is provided, remove the old image from the storage folder
-        $old_image_path = ''; // Get the old image path from the database
-        $stmt = mysqli_prepare($conn, "SELECT image_path FROM tblemployees WHERE emp_id = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $edit_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $old_image_path);
-        mysqli_stmt_fetch($stmt);
-        mysqli_stmt_close($stmt);
-
-        if (!empty($old_image_path) && file_exists($old_image_path)) {
-            unlink($old_image_path); // Delete the old image
+            if (!empty($old_image_path) && file_exists($old_image_path)) {
+                unlink($old_image_path); // Delete the old image
+            }
+        } catch (RuntimeException $e) {
+            $response = array('status' => 'error', 'message' => 'Image upload failed: ' . $e->getMessage());
+            echo json_encode($response);
+            error_log("Image upload error: " . $e->getMessage());
+            exit;
         }
-
     } else {
         $image_target_path = ''; // Empty image path
     }
@@ -157,15 +177,15 @@ function updateStaffRecords($edit_id, $firstname, $lastname, $middlename, $conta
     } elseif (empty($image_target_path)) {
         // Only image is empty
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, password=?, gender=?, role=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'isssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $staff_id, $is_supervisor, $edit_id);
     } elseif (empty($password_param)) {
         // Only password is empty
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, gender=?, role=?, image_path=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'isssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
     } else {
         // Both image and password are provided
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, password=?, gender=?, role=?, image_path=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'isssssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
     }
 
     $result = mysqli_stmt_execute($stmt);
@@ -175,7 +195,9 @@ function updateStaffRecords($edit_id, $firstname, $lastname, $middlename, $conta
         echo json_encode($response);
         exit;
     } else {
-        $response = array('status' => 'error', 'message' => 'Failed to update staff member');
+        $error_message = 'Failed to update staff member: ' . mysqli_stmt_error($stmt);
+        error_log($error_message);
+        $response = array('status' => 'error', 'message' => 'Failed to update staff member. Error: ' . mysqli_stmt_error($stmt));
         echo json_encode($response);
         exit;
     }

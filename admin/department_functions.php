@@ -1,5 +1,5 @@
 <?php 
-date_default_timezone_set('Africa/Accra');
+date_default_timezone_set('Asia/Jakarta');
 include('../includes/config.php');
 
 function updateDepartment($id, $dname, $description) {
