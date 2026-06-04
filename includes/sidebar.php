@@ -189,20 +189,5 @@
                 </li>
             </ul>
         <?php endif; ?>    
-        <div class="pcoded-navigatio-lavel">Support</div>
-        <ul class="pcoded-item pcoded-left-item">
-            <li class="">
-                <a href="https://codelytical.netlify.app/" target="_blank">
-                    <span class="pcoded-micon"><i class="feather icon-monitor"></i></span>
-                    <span class="pcoded-mtext">Portfolio</span>
-                </a>
-            </li>
-            <li class="">
-                <a href="https://www.youtube.com/@codelytical" target="_blank">
-                    <span class="pcoded-micon"><i class="feather icon-monitor"></i></span>
-                    <span class="pcoded-mtext">CodeLytical</span>
-                </a>
-            </li>
-        </ul>
     </div>
 </nav>
