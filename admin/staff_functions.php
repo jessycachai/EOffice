@@ -13,7 +13,7 @@ include('../includes/config.php');
 function handleImageUpload($file, $staff_id) {
     // Get document root path
     $document_root = $_SERVER['DOCUMENT_ROOT'];
-    $upload_dir = $document_root . '/leave_portal-main/uploads/images/';
+    $upload_dir = $document_root . '/leave_portal/uploads/images/';
     
     // Create directory if it doesn't exist
     if (!file_exists($upload_dir)) {
@@ -74,7 +74,7 @@ function handleImageUpload($file, $staff_id) {
 
     chmod($filepath, 0644);
     
-    return '/leave_portal-main/uploads/images/' . $filename;
+    return '/leave_portal/uploads/images/' . $filename;
 }
 
 function resizeImage($sourcePath, $maxWidth = 230, $maxHeight = 230) {
