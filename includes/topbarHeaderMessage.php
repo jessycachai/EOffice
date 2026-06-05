@@ -1,3 +1,24 @@
+<?php
+$topbar_query = mysqli_query($conn, "
+    SELECT emp_id, first_name, middle_name, last_name, image_path
+    FROM tblemployees
+    WHERE emp_id = '$session_id'
+    LIMIT 1
+");
+
+$topbar_user = mysqli_fetch_assoc($topbar_query);
+
+$topbar_name = trim(
+    $topbar_user['first_name'] . ' ' .
+    $topbar_user['middle_name'] . ' ' .
+    $topbar_user['last_name']
+);
+
+$topbar_image = !empty($topbar_user['image_path'])
+    ? $topbar_user['image_path']
+    : '../files/assets/images/avatar-4.jpg';
+?>
+
 <ul class="nav-right">
     <li class="header-notification">
         <div class="dropdown-primary dropdown">
@@ -56,11 +77,8 @@
     <li class="user-profile header-notification">
         <div class="dropdown-primary dropdown">
             <div class="dropdown-toggle" data-toggle="dropdown">
-                <?php
-                    $image_src = !empty($session_image) ? $session_image : '..\files\assets\images\avatar-4.jpg';
-                    echo '<img src="' . $image_src . '" class="img-radius" alt="User-Profile-Image">';
-                ?>
-                <span><?php echo $session_sfirstname . ' ' . $session_smiddlename . ' ' . $session_slastname; ?></span>
+                <img src="<?= $topbar_image ?>" class="img-radius" alt="User-Profile-Image">
+                <span><?= $topbar_name ?></span>
                 <i class="feather icon-chevron-down"></i>
             </div>
             <ul class="show-notification profile-notification dropdown-menu"

@@ -177,15 +177,15 @@ function updateStaffRecords($edit_id, $firstname, $lastname, $middlename, $conta
     } elseif (empty($image_target_path)) {
         // Only image is empty
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, password=?, gender=?, role=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'isssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $staff_id, $is_supervisor, $edit_id);
     } elseif (empty($password_param)) {
         // Only password is empty
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, gender=?, role=?, image_path=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'isssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
     } else {
         // Both image and password are provided
         $stmt = mysqli_prepare($conn, "UPDATE tblemployees SET department=?, first_name=?, last_name=?, middle_name=?, phone_number=?, designation=?, email_id=?, password=?, gender=?, role=?, image_path=?, staff_id=?, is_supervisor=? WHERE emp_id=?");
-        mysqli_stmt_bind_param($stmt, 'issssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
+        mysqli_stmt_bind_param($stmt, 'isssssssssssii', $department, $firstname, $lastname, $middlename, $contact, $designation, $email, $password_param, $gender, $role, $image_target_path, $staff_id, $is_supervisor, $edit_id);
     }
 
     $result = mysqli_stmt_execute($stmt);
