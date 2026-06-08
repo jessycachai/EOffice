@@ -274,10 +274,14 @@ if (!$result) {
                                                                     $totalHoursNumber = $diffSeconds / 3600;
                                                                     $totalHours = number_format($totalHoursNumber, 2) . ' Hours';
 
-                                                                    if ($totalHoursNumber < 8) {
-                                                                        $status = 'Incomplete';
+                                                                    if ($totalHoursNumber >= 9) {
+                                                                        $status = 'Overtime';
+                                                                    } elseif ($totalHoursNumber >= 8) {
+                                                                        $status = 'Present';
+                                                                    } elseif ($totalHoursNumber >= 4) {
+                                                                        $status = 'Half Day';
                                                                     } else {
-                                                                        $status = 'Completed';
+                                                                        $status = 'Absent';
                                                                     }
                                                                 }
                                                         ?>
@@ -292,14 +296,20 @@ if (!$result) {
                                                                     <td><?= $row['time_out'] ?: '-'; ?></td>
                                                                     <td><?= $totalHours; ?></td>
                                                                     <td>
-                                                                        <?php if ($status == 'Completed') { ?>
-                                                                            <span class="badge badge-success">Completed</span>
+                                                                        <?php if ($status == 'Overtime') { ?>
+                                                                            <span class="badge badge-info">Overtime</span>
 
-                                                                        <?php } elseif ($status == 'Incomplete') { ?>
-                                                                            <span class="badge badge-danger">Incomplete</span>
+                                                                        <?php } elseif ($status == 'Present') { ?>
+                                                                            <span class="badge badge-success">Present</span>
+
+                                                                        <?php } elseif ($status == 'Half Day') { ?>
+                                                                            <span class="badge badge-warning">Half Day</span>
+
+                                                                        <?php } elseif ($status == 'Absent') { ?>
+                                                                            <span class="badge badge-danger">Absent</span>
 
                                                                         <?php } else { ?>
-                                                                            <span class="badge badge-warning">Not Clocked Out</span>
+                                                                            <span class="badge badge-secondary">Not Clocked Out</span>
                                                                         <?php } ?>
                                                                     </td>
                                                                 </tr>
