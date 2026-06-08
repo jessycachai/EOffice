@@ -101,6 +101,12 @@
                                 <span class="pcoded-mtext">My Attendance</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="attendance_report.php">
+                                <span class="pcoded-micon"><i class="feather icon-clock"></i></span>
+                                <span class="pcoded-mtext">Attendance Report</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="<?php echo ($page_name == 'chat') ? 'active' : ''; ?>">

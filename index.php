@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Leave Portal </title>
+    <title>E-Office </title>
     <!-- Meta -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
@@ -60,7 +60,7 @@ session_destroy();
                                 <div class="card-block">
                                     <div class="row m-b-20">
                                         <div class="col-md-12">
-                                            <h3 class="text-center">Leave Management Portal</h3>
+                                            <h3 class="text-center">E-Office</h3>
                                         </div>
                                     </div>
                                     <div class="form-group form-primary">
