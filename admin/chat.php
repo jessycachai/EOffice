@@ -8,31 +8,164 @@ if (!isset($_SESSION['slogin']) || !isset($_SESSION['srole'])) {
 
 $page_name = "chat";
 $currentUser = $_SESSION['sstaff_id'];
-$selectedUser = isset($_GET['user']) ? $_GET['user'] : null;
+$selectedUser = $_GET['user'] ?? null;
 
 $users = mysqli_query($conn, "
-    SELECT staff_id, first_name, last_name, role
+    SELECT staff_id, first_name, last_name, role, image_path
     FROM tblemployees
     WHERE staff_id != '$currentUser'
     ORDER BY first_name ASC
 ");
 
+$userInfo = null;
+if ($selectedUser) {
+    $userStmt = $conn->prepare("
+        SELECT first_name, last_name, role, image_path
+        FROM tblemployees
+        WHERE staff_id = ?
+        LIMIT 1
+    ");
+    $userStmt->bind_param("s", $selectedUser);
+    $userStmt->execute();
+    $userInfo = $userStmt->get_result()->fetch_assoc();
+}
+
 $messages = null;
 if ($selectedUser) {
     $stmt = $conn->prepare("
-        SELECT *
-        FROM tblchat_messages
+        SELECT 
+            m.*,
+            s.first_name AS sender_first_name,
+            s.last_name AS sender_last_name
+        FROM tblchat_messages m
+        LEFT JOIN tblemployees s ON m.sender_id = s.staff_id
         WHERE 
-            (sender_id = ? AND receiver_id = ?)
+            (m.sender_id = ? AND m.receiver_id = ?)
             OR
-            (sender_id = ? AND receiver_id = ?)
-        ORDER BY created_at ASC
+            (m.sender_id = ? AND m.receiver_id = ?)
+        ORDER BY m.created_at ASC
     ");
+
     $stmt->bind_param("ssss", $currentUser, $selectedUser, $selectedUser, $currentUser);
     $stmt->execute();
     $messages = $stmt->get_result();
 }
 ?>
+
+<style>
+.chat-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+.chat-user:hover {
+    background: #f5f7fb;
+    text-decoration: none;
+}
+
+.chat-user.active {
+    background: #e9f8f8;
+    border-left: 4px solid #01a9ac;
+}
+
+.chat-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.col-md-8 .card {
+    width: 100%;
+}
+
+.chat-box {
+    height: 480px;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-y: auto;
+    background: #f5f7fb;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.message-row {
+    display: flex;
+    width: 100%;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.message-right {
+    justify-content: flex-end;
+}
+
+.message-left {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px 14px;
+    word-wrap: break-word;
+}
+
+.bubble-me {
+    background: #01a9ac;
+    color: #fff;
+    border-radius: 15px 15px 5px 15px;
+}
+
+.bubble-other {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 15px 15px 15px 5px;
+}
+
+.sender-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: .75;
+    margin-top: 6px;
+    text-align: right;
+}
+
+.chat-input-wrap {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+}
+
+.chat-input-wrap textarea {
+    flex: 1;
+    resize: none;
+}
+
+.chat-input-wrap button {
+    width: auto;
+    min-width: 100px;
+}
+
+</style>
 
 <body>
 <?php include('../includes/loader.php') ?>
@@ -54,15 +187,9 @@ if ($selectedUser) {
                             <div class="page-wrapper">
 
                                 <div class="page-header">
-                                    <div class="row align-items-end">
-                                        <div class="col-lg-8">
-                                            <div class="page-header-title">
-                                                <div class="d-inline">
-                                                    <h4>Internal Chat</h4>
-                                                    <span>Chat antar user EOffice</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div class="page-header-title">
+                                        <h4>Internal Chat</h4>
+                                        <span>Chat antar user E-Office</span>
                                     </div>
                                 </div>
 
@@ -74,15 +201,17 @@ if ($selectedUser) {
                                                 <div class="card-header">
                                                     <h5>Daftar User</h5>
                                                 </div>
-                                                <div class="card-block">
-                                                    <?php while ($row = mysqli_fetch_assoc($users)) { ?>
-                                                        <a class="d-block p-2 border-bottom"
-                                                           href="chat.php?user=<?php echo urlencode($row['staff_id']); ?>">
-                                                            <strong>
-                                                                <?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?>
-                                                            </strong>
-                                                            <br>
-                                                            <small><?php echo htmlspecialchars($row['role']); ?></small>
+                                                <div class="card-block" style="padding:0;">
+                                                    <?php while ($row = mysqli_fetch_assoc($users)) { 
+                                                        $avatar = !empty($row['image_path']) ? $row['image_path'] : '../files/assets/images/avatar-4.jpg';
+                                                        $active = ($selectedUser == $row['staff_id']) ? 'active' : '';
+                                                    ?>
+                                                        <a class="chat-user <?= $active; ?>" href="chat.php?user=<?= urlencode($row['staff_id']); ?>">
+                                                            <img src="<?= htmlspecialchars($avatar); ?>" class="chat-avatar" alt="avatar">
+                                                            <div>
+                                                                <strong><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?></strong><br>
+                                                                <small><?= htmlspecialchars($row['role']); ?></small>
+                                                            </div>
                                                         </a>
                                                     <?php } ?>
                                                 </div>
@@ -92,56 +221,65 @@ if ($selectedUser) {
                                         <div class="col-md-8">
                                             <div class="card">
                                                 <div class="card-header">
-                                                    <h5>Pesan</h5>
+                                                    <h5>
+                                                        <?php if ($userInfo) { ?>
+                                                            Chat dengan <?= htmlspecialchars($userInfo['first_name'] . ' ' . $userInfo['last_name']); ?>
+                                                        <?php } else { ?>
+                                                            Pesan
+                                                        <?php } ?>
+                                                    </h5>
                                                 </div>
+
                                                 <div class="card-block">
-
                                                     <?php if ($selectedUser) { ?>
-                                                        <div style="height:350px; overflow-y:auto; border:1px solid #ddd; padding:15px; background:#f9f9f9; margin-bottom:15px;">
-                                                            <?php if ($messages && mysqli_num_rows($messages) > 0) { ?>
-                                                                <?php while ($msg = mysqli_fetch_assoc($messages)) { ?>
-                                                                    <?php $isMe = $msg['sender_id'] == $currentUser; ?>
 
-                                                                    <div style="text-align: <?php echo $isMe ? 'right' : 'left'; ?>; margin-bottom: 12px;">
-                                                                        <div style="
-                                                                            display:inline-block;
-                                                                            max-width:70%;
-                                                                            padding:10px 15px;
-                                                                            border-radius:12px;
-                                                                            background:<?php echo $isMe ? '#01a9ac' : '#ffffff'; ?>;
-                                                                            color:<?php echo $isMe ? '#ffffff' : '#333333'; ?>;
-                                                                            border:1px solid #ddd;
-                                                                        ">
-                                                                            <strong><?php echo $isMe ? 'Saya' : 'Dia'; ?></strong>
-                                                                            <br>
-                                                                            <?php echo nl2br(htmlspecialchars($msg['message'])); ?>
-                                                                            <br>
-                                                                            <small><?php echo $msg['created_at']; ?></small>
+                                                        <div id="chat-box" class="chat-box">
+                                                            <?php if ($messages && mysqli_num_rows($messages) > 0) { ?>
+                                                                <?php while ($msg = mysqli_fetch_assoc($messages)) { 
+                                                                    $isMe = ($msg['sender_id'] == $currentUser);
+                                                                    $senderName = trim($msg['sender_first_name'] . ' ' . $msg['sender_last_name']);
+                                                                ?>
+                                                                    <div class="message-row <?= $isMe ? 'message-right' : 'message-left'; ?>">
+                                                                        <div class="message-bubble <?= $isMe ? 'bubble-me' : 'bubble-other'; ?>">
+                                                                            <div class="sender-name">
+                                                                                <?= htmlspecialchars($senderName); ?>
+                                                                            </div>
+
+                                                                            <div class="message-text">
+                                                                                <?= nl2br(htmlspecialchars($msg['message'])); ?>
+                                                                            </div>
+
+                                                                            <div class="message-time">
+                                                                                <?= date('H:i', strtotime($msg['created_at'])); ?>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 <?php } ?>
                                                             <?php } else { ?>
-                                                                <p class="text-muted">Belum ada pesan.</p>
+                                                                <div class="text-center text-muted p-5">
+                                                                    Belum ada pesan.
+                                                                </div>
                                                             <?php } ?>
                                                         </div>
 
                                                         <form method="POST" action="../chat_send.php">
-                                                            <input type="hidden" name="receiver_id" value="<?php echo htmlspecialchars($selectedUser); ?>">
+                                                            <input type="hidden" name="receiver_id" value="<?= htmlspecialchars($selectedUser); ?>">
                                                             <input type="hidden" name="redirect_path" value="admin/chat.php">
 
-                                                            <textarea name="message" class="form-control" rows="3" placeholder="Tulis pesan..." required></textarea>
-                                                            <br>
-
-                                                            <button type="submit" class="btn btn-primary">
-                                                                <i class="feather icon-send"></i> Kirim
-                                                            </button>
+                                                            <div class="chat-input-wrap">
+                                                                <textarea name="message" class="form-control" rows="2" placeholder="Tulis pesan..." required></textarea>
+                                                                <button type="submit" class="btn btn-primary">
+                                                                    <i class="feather icon-send"></i>
+                                                                    <span style="margin-left:5px;">Kirim</span>
+                                                                </button>
+                                                            </div>
                                                         </form>
+
                                                     <?php } else { ?>
                                                         <div class="text-center text-muted p-5">
                                                             <h5>Pilih user untuk mulai chat</h5>
                                                         </div>
                                                     <?php } ?>
-
                                                 </div>
                                             </div>
                                         </div>
@@ -160,5 +298,15 @@ if ($selectedUser) {
 </div>
 
 <?php include('../includes/scripts.php') ?>
+
+<script>
+window.onload = function() {
+    var chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+};
+</script>
+
 </body>
 </html>

@@ -7,9 +7,13 @@ if (!isset($_SESSION['slogin'])) {
     exit();
 }
 
-$sender_id = $_SESSION['sstaff_id'];
-$receiver_id = $_POST['receiver_id'];
-$message = $_POST['message'];
+$sender_id = $_SESSION['sstaff_id'] ?? '';
+$receiver_id = $_POST['receiver_id'] ?? '';
+$message = trim($_POST['message'] ?? '');
+
+if ($sender_id == '' || $receiver_id == '' || $message == '') {
+    die("Chat Error: sender_id / receiver_id / message kosong");
+}
 
 $stmt = $conn->prepare("
     INSERT INTO tblchat_messages (sender_id, receiver_id, message)
@@ -17,9 +21,12 @@ $stmt = $conn->prepare("
 ");
 
 $stmt->bind_param("sss", $sender_id, $receiver_id, $message);
-$stmt->execute();
 
-$redirect = isset($_POST['redirect_path']) ? $_POST['redirect_path'] : 'chat.php';
+if (!$stmt->execute()) {
+    die("Insert Error: " . $stmt->error);
+}
+
+$redirect = $_POST['redirect_path'] ?? 'admin/chat.php';
 
 header("Location: " . $redirect . "?user=" . urlencode($receiver_id));
 exit();
