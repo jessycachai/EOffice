@@ -184,6 +184,17 @@
                                                                 <p>
                                                                     <?php echo isset($row['description']) ? html_entity_decode($row['description']) : ''; ?>
                                                                 </p>
+                                                                
+                                                                <?php if (!empty($row['attachment'])): ?>
+                                                                    <div class="mt-3">
+                                                                        <strong>Attachment:</strong><br>
+                                                                        <a href="<?= htmlspecialchars($row['attachment']); ?>" 
+                                                                        target="_blank" 
+                                                                        class="btn btn-sm btn-info">
+                                                                            <i class="fa fa-paperclip"></i> Lihat Attachment
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
                                                     </div>

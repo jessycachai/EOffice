@@ -188,8 +188,8 @@ if ($selectedUser) {
 
                                 <div class="page-header">
                                     <div class="page-header-title">
-                                        <h4>Internal Chat</h4>
-                                        <span>Chat antar staff E-Office</span>
+                                        <h4>Internal Messaging</h4>
+                                        <span>Chat Between E-Office Staff</span>
                                     </div>
                                 </div>
 
@@ -199,7 +199,7 @@ if ($selectedUser) {
                                         <div class="col-md-4">
                                             <div class="card">
                                                 <div class="card-header">
-                                                    <h5>Daftar staff</h5>
+                                                    <h5>Staff List</h5>
                                                 </div>
                                                 <div class="card-block" style="padding:0;">
                                                     <?php while($row = mysqli_fetch_assoc($users)) {
@@ -278,7 +278,7 @@ if ($selectedUser) {
 
                                                     <?php } else { ?>
                                                         <div class="text-center text-muted p-5">
-                                                            <h5>Pilih staff untuk mulai chat</h5>
+                                                            <h5>Select Staff to start chat</h5>
                                                         </div>
                                                     <?php } ?>
                                                 </div>

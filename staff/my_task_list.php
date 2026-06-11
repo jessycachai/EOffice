@@ -147,7 +147,7 @@ if ($userRole !== 'Staff') {
                                                     $isSupervisor = $_SESSION['is_supervisor'] == 1; // Check if the user is a supervisor
 
                                                     // Base query
-                                                     $query = "SELECT t.id, t.title, t.description, t.status, t.priority, t.created_at, t.start_date, t.due_date, 
+                                                     $query = "SELECT t.id, t.title, t.description, t.status, t.priority, t.created_at, t.start_date, t.due_date, t.attachment,
                                                                         e.first_name AS assigned_to_first_name, e.last_name AS assigned_to_last_name, 
                                                                         e.middle_name AS assigned_to_middle_name, e.image_path AS assigned_to_profile,
                                                                         em.first_name AS assigned_by_first_name, em.last_name AS assigned_by_last_name, 
@@ -232,7 +232,7 @@ if ($userRole !== 'Staff') {
                                                     }
 
                                                     // Bind result variables
-                                                    mysqli_stmt_bind_result($stmt, $id, $title, $description, $status, $priority, $created_at, $start_date, $due_date, 
+                                                    mysqli_stmt_bind_result($stmt, $id, $title, $description, $status, $priority, $created_at, $start_date, $due_date, $attachment, 
                                                                             $assigned_to_first_name, $assigned_to_last_name, $assigned_to_middle_name, $assigned_to_profile,
                                                                             $assigned_by_first_name, $assigned_by_last_name, $assigned_by_middle_name, $assigned_by_profile,
                                                                             $assigned_to_emp_id, $assigned_by_emp_id, $supervisor_id);
@@ -248,6 +248,7 @@ if ($userRole !== 'Staff') {
                                                             'created_at' => $created_at,
                                                             'start_date' => $start_date,
                                                             'due_date' => $due_date,
+                                                            'attachment' => $attachment,
                                                             'assigned_to' => $assigned_to_first_name . ' ' . $assigned_to_middle_name . ' ' . $assigned_to_last_name,
                                                             'assigned_by' => $assigned_by_first_name . ' ' . $assigned_by_middle_name . ' ' . $assigned_by_last_name,
                                                             'assigned_to_profile' => $assigned_to_profile,
@@ -388,6 +389,13 @@ if ($userRole !== 'Staff') {
                                                                                 echo $description . (strlen($result['description']) > 250 ? '...' : '');
                                                                             ?>
                                                                         </p>
+                                                                        <?php if (!empty($result['attachment'])): ?>
+                                                                            <a href="<?= htmlspecialchars($result['attachment']) ?>"
+                                                                            target="_blank"
+                                                                            class="btn btn-sm btn-info">
+                                                                            <i class="fa fa-paperclip"></i> Lihat Attachment
+                                                                            </a>
+                                                                        <?php endif; ?>
                                                                         <div class="d-flex align-items-center">
                                                                             <div class="job-meta-data me-3" style="margin-right: 40px;">
                                                                                 <strong>Start Date:</strong>

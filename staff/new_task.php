@@ -1,18 +1,5 @@
 <?php include('../includes/header.php')?>
-<?php
-// Check if the user is logged in
-if (!isset($_SESSION['slogin']) || !isset($_SESSION['srole'])) {
-    header('Location: ../index.php');
-    exit();
-}
 
-// Check if the user has the role of Manager or Admin
-$userRole = $_SESSION['srole'];
-if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
-    header('Location: ../index.php');
-    exit();
-}
-?>
 <body>
 <!-- Pre-loader start -->
 <?php include('../includes/loader.php')?>
@@ -69,7 +56,7 @@ if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
                                                     <div class="row">
                                                         <div class="col-sm-6 mobile-inputs">
                                                             <h4 class="sub-title"></h4>
-                                                            <form>
+                                                            <form id="taskForm" enctype="multipart/form-data">
                                                                 <div class="form-group row">
                                                                     <div class="col-sm-12">
                                                                         <label for="userName-2" class="block">Title</label>
@@ -88,17 +75,16 @@ if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
                                                                             // Check if we are editing a record and have a pre-selected employee
                                                                             if (!empty($row['assigned_to'])) {
                                                                                 // Query the database to get the employee details
-                                                                                $stmt = mysqli_prepare($conn, "SELECT emp_id, first_name, middle_name, last_name, designation FROM tblemployees WHERE emp_id = ?");
+                                                                                $stmt = mysqli_prepare($conn, "SELECT emp_id, first_name, middle_name, last_name FROM tblemployees WHERE emp_id = ?");
                                                                                 mysqli_stmt_bind_param($stmt, "i", $row['assigned_to']);
                                                                                 mysqli_stmt_execute($stmt);
-                                                                                mysqli_stmt_bind_result($stmt, $emp_id, $first_name, $middle_name, $last_name, $designation);
+                                                                                mysqli_stmt_bind_result($stmt, $emp_id, $first_name, $middle_name, $last_name);
                                                                                 mysqli_stmt_fetch($stmt);
                                                                                 mysqli_stmt_close($stmt);
 
                                                                                 // Output the selected option
                                                                                 $selected_employee_name = $first_name . ' ' . $middle_name . ' ' . $last_name;
-                                                                                //echo '<option value="' . $emp_id . '" selected>' . $selected_employee_name . '</option>';
-                                                                                echo '<option value="' . $emp_id . '">' . $selected_employee_name . ' (' . $designation . ')</option>';
+                                                                                echo '<option value="' . $emp_id . '" selected>' . $selected_employee_name . '</option>';
 
                                                                                 // Prepare the base query to fetch other employees
                                                                                 $query = "SELECT emp_id, first_name, middle_name, last_name, designation, department, role, is_supervisor 
@@ -248,6 +234,12 @@ if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                                <div class="form-group row">
+                                                                    <div class="col-sm-12">
+                                                                        <label class="block">Attachment</label>
+                                                                        <input type="file" name="attachment" id="attachment" class="form-control">
+                                                                    </div>
+                                                                </div>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
@@ -296,15 +288,6 @@ if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
         gtag('config', 'UA-23581568-13');
     </script>
     <script>
-        function convertDateFormat(dateStr) {
-            if (dateStr.includes('/')) {
-                var parts = dateStr.split('/');
-                return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
-            } else {
-                return dateStr;
-            }
-        }
-
         $('#tasks-update').click(function(event){
             event.preventDefault();
             (async () => {
@@ -395,94 +378,94 @@ if ($userRole !== 'Staff' && $_SESSION['is_supervisor'] !== 1) {
         })
     </script>
     <script>
+        function convertDateFormat(dateStr) {
+            var parts = dateStr.split('/');
+            return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+        }
+
         $('#tasks-add').click(function(event){
-            event.preventDefault(); // prevent the default form submission
-            (async () => {
-                var startDate = convertDateFormat($('#dropper-animation').val());
-                var dueDate = convertDateFormat($('#dropper-default').val());
+            event.preventDefault();
 
-                console.log("START DATE HERE: " + startDate);
-                console.log("DUE DATE HERE: " + dueDate);
+            var startDate = convertDateFormat($('#dropper-animation').val());
+            var dueDate = convertDateFormat($('#dropper-default').val());
 
-                if (!startDate || !dueDate) {
-                    Swal.fire({
-                        icon: 'warning',
-                        text: 'Please fill in all required fields.',
-                        confirmButtonColor: '#ffc107',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-
-                var data = {
-                    title: $('#title').val(),
-                    description: $('#summernote').summernote('code'),
-                    assigned_to: $('#assigned_to').val(),
-                    priority: $('input[name="priority"]:checked').val(),
-                    start_date: startDate,
-                    due_date: dueDate,
-                    status: "Pending",
-                    action: "tasks-add",
-                };
-
-                if (data.title === '' || data.description === '' || 
-                    data.priority === '' || data.assigned_to === '' || data.start_date === '' || 
-                    data.due_date === '') {
-                    Swal.fire({
-                        icon: 'warning',
-                        text: 'Please all fieds are required. Kindly fill all',
-                        confirmButtonColor: '#ffc107',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                console.log("START DATE HERE: "+ $('#dropper-animation').val())
-                console.log('Data HERE: ' + JSON.stringify(data));
-                $.ajax({
-                    url: '../admin/task_functions.php',
-                    type: 'post',
-                    data: data,
-                    success:function(response) {
-                        console.log('success function called');
-                        response = JSON.parse(response);
-                        console.log('RESPONSE HERE: ' + response.status)
-                        console.log(`RESPONSE HERE: ${response.message}`);
-                        if (response.status == 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                html: response.message,
-                                confirmButtonColor: '#01a9ac',
-                                confirmButtonText: 'OK'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    location.reload();
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                text: response.message,
-                                confirmButtonColor: '#eb3422',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.log('AJAX Data HERE: ' + JSON.stringify(data));
-                        console.log("Response from server: " + jqXHR.responseText);
-                        console.log("Status:", status);
-                        console.log("Error:", error);
-                        console.log("AJAX error: " + textStatus + ' : ' + errorThrown);
-                        Swal.fire({
-                                icon: 'error',
-                                text: jqXHR.responseText,
-                                confirmButtonColor: '#eb3422',
-                                confirmButtonText: 'OK'
-                            });
-                    }
+            if (!startDate || !dueDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    text: 'Please fill in all required fields.',
+                    confirmButtonColor: '#ffc107',
+                    confirmButtonText: 'OK'
                 });
-            })()
-        })
+                return;
+            }
+
+            var title = $('#title').val();
+            var description = $('#summernote').summernote('code');
+            var assigned_to = $('#assigned_to').val();
+            var priority = $('input[name="priority"]:checked').val();
+
+            if (title === '' || description === '' || priority === undefined || assigned_to === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    text: 'Please fill in all required fields.',
+                    confirmButtonColor: '#ffc107',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            var formData = new FormData();
+
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('assigned_to', assigned_to);
+            formData.append('priority', priority);
+            formData.append('start_date', startDate);
+            formData.append('due_date', dueDate);
+            formData.append('status', 'Pending');
+            formData.append('action', 'tasks-add');
+
+            if ($('#attachment')[0].files.length > 0) {
+                formData.append('attachment', $('#attachment')[0].files[0]);
+            }
+
+            $.ajax({
+                url: '../admin/task_functions.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+
+                success: function(response){
+                    console.log(response);
+
+                    response = JSON.parse(response);
+
+                    if(response.status == 'success'){
+                        Swal.fire({
+                            icon:'success',
+                            text:response.message,
+                            confirmButtonColor:'#01a9ac'
+                        }).then(() => {
+                            window.location.href = "my_task_list.php";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon:'error',
+                            text:response.message
+                        });
+                    }
+                },
+
+                error:function(xhr){
+                    console.log(xhr.responseText);
+                    Swal.fire({
+                        icon:'error',
+                        text:xhr.responseText
+                    });
+                }
+            });
+        });
     </script>
     <!-- Summernote JS - CDN Link -->
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>

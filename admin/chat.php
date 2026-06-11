@@ -188,8 +188,8 @@ if ($selectedUser) {
 
                                 <div class="page-header">
                                     <div class="page-header-title">
-                                        <h4>Internal Chat</h4>
-                                        <span>Chat antar user E-Office</span>
+                                        <h4>Internal Messaging</h4>
+                                        <span>Chat between E-Office Staff</span>
                                     </div>
                                 </div>
 
@@ -199,7 +199,7 @@ if ($selectedUser) {
                                         <div class="col-md-4">
                                             <div class="card">
                                                 <div class="card-header">
-                                                    <h5>Daftar User</h5>
+                                                    <h5>Staff List</h5>
                                                 </div>
                                                 <div class="card-block" style="padding:0;">
                                                     <?php while ($row = mysqli_fetch_assoc($users)) { 
@@ -223,9 +223,9 @@ if ($selectedUser) {
                                                 <div class="card-header">
                                                     <h5>
                                                         <?php if ($userInfo) { ?>
-                                                            Chat dengan <?= htmlspecialchars($userInfo['first_name'] . ' ' . $userInfo['last_name']); ?>
+                                                            Chat with <?= htmlspecialchars($userInfo['first_name'] . ' ' . $userInfo['last_name']); ?>
                                                         <?php } else { ?>
-                                                            Pesan
+                                                            Message
                                                         <?php } ?>
                                                     </h5>
                                                 </div>
@@ -257,7 +257,7 @@ if ($selectedUser) {
                                                                 <?php } ?>
                                                             <?php } else { ?>
                                                                 <div class="text-center text-muted p-5">
-                                                                    Belum ada pesan.
+                                                                    No messages yet.
                                                                 </div>
                                                             <?php } ?>
                                                         </div>
@@ -267,17 +267,17 @@ if ($selectedUser) {
                                                             <input type="hidden" name="redirect_path" value="admin/chat.php">
 
                                                             <div class="chat-input-wrap">
-                                                                <textarea name="message" class="form-control" rows="2" placeholder="Tulis pesan..." required></textarea>
+                                                                <textarea name="message" class="form-control" rows="2" placeholder="Type a messages..." required></textarea>
                                                                 <button type="submit" class="btn btn-primary">
                                                                     <i class="feather icon-send"></i>
-                                                                    <span style="margin-left:5px;">Kirim</span>
+                                                                    <span style="margin-left:5px;">Send</span>
                                                                 </button>
                                                             </div>
                                                         </form>
 
                                                     <?php } else { ?>
                                                         <div class="text-center text-muted p-5">
-                                                            <h5>Pilih user untuk mulai chat</h5>
+                                                            <h5>Select Staff to start chat</h5>
                                                         </div>
                                                     <?php } ?>
                                                 </div>

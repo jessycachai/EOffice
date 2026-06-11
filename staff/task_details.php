@@ -195,6 +195,17 @@ if ($userRole !== 'Staff') {
                                                                 <p>
                                                                     <?php echo isset($row['description']) ? html_entity_decode($row['description']) : ''; ?>
                                                                 </p>
+
+                                                                <?php if (!empty($row['attachment'])): ?>
+                                                                    <div class="mt-3">
+                                                                        <strong>Attachment:</strong><br>
+                                                                        <a href="<?= htmlspecialchars($row['attachment']) ?>"
+                                                                        target="_blank"
+                                                                        class="btn btn-info btn-sm">
+                                                                        <i class="fa fa-paperclip"></i> Lihat Attachment
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
                                                     </div>

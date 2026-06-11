@@ -34,30 +34,55 @@ function updateCustomerRecords($id, $firstname, $lastname, $middlename, $contact
         exit;
     }
 }
+function uploadTaskAttachment($file) {
+    if (!isset($file) || empty($file['name'])) {
+        return '';
+    }
 
-function addTaskRecord($title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status) {
+    $uploadDir = "../uploads/tasks/";
+
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'zip'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowed)) {
+        echo json_encode(['status' => 'error', 'message' => 'File type not allowed']);
+        exit;
+    }
+
+    $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\.-]/', '_', basename($file['name']));
+    $targetPath = $uploadDir . $fileName;
+
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return $targetPath;
+    }
+
+    return '';
+}
+function addTaskRecord($title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status, $attachment) {
     global $conn;
 
     if (empty($title) || empty($description) || empty($assigned_to) || empty($assigned_by) || empty($priority) || empty($start_date) || empty($due_date)) {
-        $response = array('status' => 'error', 'message' => 'Please fill in all required fields');
-        echo json_encode($response);
+        echo json_encode(['status' => 'error', 'message' => 'Please fill in all required fields']);
         exit;
     }
 
-    // Insert task record
-    $stmt = mysqli_prepare($conn, "INSERT INTO tbltask (title, description, assigned_to, assigned_by, priority, start_date, due_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, 'ssiissss', $title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status);
+    $stmt = mysqli_prepare($conn, "INSERT INTO tbltask 
+        (title, description, assigned_to, assigned_by, priority, start_date, due_date, status, attachment) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+    mysqli_stmt_bind_param($stmt, 'ssiisssss', $title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status, $attachment);
+
     $result = mysqli_stmt_execute($stmt);
 
-    if ($result) {
-        $response = array('status' => 'success', 'message' => 'Task added successfully');
-        echo json_encode($response);
-        exit;
-    } else {
-        $response = array('status' => 'error', 'message' => 'Failed to add task');
-        echo json_encode($response);
-        exit;
-    }
+    echo json_encode($result
+        ? ['status' => 'success', 'message' => 'Task added successfully']
+        : ['status' => 'error', 'message' => 'Failed to add task']
+    );
+    exit;
 }
 
 function updatePriority($id, $priority) {
@@ -167,7 +192,9 @@ if(isset($_POST['action'])) {
         $due_date = $_POST['due_date'];
         $status = $_POST['status'];
 
-        $response = addTaskRecord($title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status);
+        $attachment = uploadTaskAttachment($_FILES['attachment'] ?? null);
+
+        $response = addTaskRecord($title, $description, $assigned_to, $assigned_by, $priority, $start_date, $due_date, $status, $attachment);
         echo $response;
 
     } else if ($_POST['action'] === 'update-task-priority') {
