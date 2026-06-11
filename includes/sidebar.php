@@ -12,6 +12,14 @@
             </ul>
             <div class="pcoded-navigatio-lavel">Appplications</div>
             <ul class="pcoded-item pcoded-left-item">
+                <li class="<?php echo ($page_name == 'calendar') ? 'active' : ''; ?>">
+                    <a href="calendar.php">
+                        <span class="pcoded-micon">
+                            <i class="feather icon-calendar"></i>
+                        </span>
+                        <span class="pcoded-mtext">Calendar</span>
+                    </a>
+                </li>
                 <li class="<?php echo ($page_name == 'department') ? 'active' : ''; ?>">
                     <a href="department.php">
                         <span class="pcoded-micon"><i class="feather icon-monitor"></i></span>
